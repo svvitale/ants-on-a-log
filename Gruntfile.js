@@ -130,16 +130,6 @@ module.exports = function (grunt) {
                 files: ['./*.md']
             }
         },
-
-        copy: {
-            main: {
-                expand: true,
-                cwd: 'bower_components',
-                src: '**',
-                dest: 'js/vendor',
-            },
-        },
-
     });
 
     // Dependencies
@@ -152,13 +142,12 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-autoprefixer');
     grunt.loadNpmTasks('grunt-zip');
-    grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task
     grunt.registerTask('default', ['css', 'js']);
 
     // JS task
-    grunt.registerTask('js', ['jshint', 'uglify', 'copy']);
+    grunt.registerTask('js', ['jshint', 'uglify']);
 
     // Theme CSS
     grunt.registerTask('css-themes', ['sass:themes']);
