@@ -134,8 +134,9 @@ module.exports = function (grunt) {
         copy: {
             main: {
                 expand: true,
-                src: 'bower_components/**',
-                dest: 'js/',
+                cwd: 'bower_components',
+                src: '**',
+                dest: 'js/vendor',
             },
         },
 
@@ -157,7 +158,7 @@ module.exports = function (grunt) {
     grunt.registerTask('default', ['css', 'js']);
 
     // JS task
-    grunt.registerTask('js', ['jshint', 'uglify']);
+    grunt.registerTask('js', ['jshint', 'uglify', 'copy']);
 
     // Theme CSS
     grunt.registerTask('css-themes', ['sass:themes']);
@@ -172,6 +173,6 @@ module.exports = function (grunt) {
     grunt.registerTask('package', ['default', 'zip']);
 
     // Serve presentation locally
-    grunt.registerTask('serve', ['copy', 'connect', 'watch']);
+    grunt.registerTask('serve', ['connect', 'watch']);
 
 };
