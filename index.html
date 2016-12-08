@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Ants on a Log</title>
+
+    <meta name="author" content="Scott Vitale">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css">
+
+    <link rel="shortcut icon" href="favicon.ico">
+
+    <link rel="stylesheet" href="bower_components/mermaid/dist/mermaid.dark.css">
+    <script src="bower_components/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var config = {
+                startOnLoad: true,
+                sequence: {
+//                diagramMarginX: 50,
+//                diagramMarginY: 10,
+//                boxTextMargin: 5,
+//                noteMargin: 10,
+//                messageMargin: 35,
+                    mirrorActors: true
+                }
+            };
+            mermaid.initialize(config);
+        });
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+        .messageText {
+            fill: lightgrey;
+            stroke: none;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+        <section>
+            <h1>Ants on a Log</h1>
+            <h3>Using Celery to Efficiently Process External API Calls in Django</h3>
+            <p>
+                <br>
+                Scott Vitale, Founder @ <img src="spigotlabs.png"
+                                             style="border: 0; background: rgba(0, 0, 0, 0); height: 150px; vertical-align: middle"/><br/>
+                @svvitale <i class="fa fa-twitter"></i> <i class="fa fa-github"></i> <i class="fa fa-facebook"></i> <i class="fa fa-linkedin"></i>
+            </p>
+        </section>
+
+        <section>
+            <h2>APIs: Legos for Developers</h2>
+            <ul>
+                <li>Authentication</li>
+                <li>Social network engagement</li>
+                <li>Push notifications</li>
+                <li>Analytics</li>
+                <li>...pretty much everything</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>No Pain, No Gain</h2>
+            <p style="text-align: left;">Relying on an external API means suffering when that API experiences</p>
+            <ul>
+                <li>Outages</li>
+                <li>Slow response times</li>
+                <li>Maintenance windows</li>
+                <li>DDoS and other attacks</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Imagine a world where</h2>
+            <p>
+                You run a cutting edge pet shop called
+                <span style="font-weight: bolder; text-decoration: underline">Kick Ass Pets</span>
+            </p>
+            <p class="fragment">
+                You've built a sweet Django app that interfaces with the
+                <span style="font-weight: bolder; text-decoration: underline">TurtleAPI</span>, a
+                service that provides interesting facts on all varieties of shelled reptiles.
+            </p>
+            <p class="fragment">
+                TurtleAPI lives up to its name. API calls can take <u>seconds</u> to execute.
+            </p>
+        </section>
+
+        <section>
+            <h2>Like any good manager, we need to delegate</h2>
+            <img src="manager.gif">
+        </section>
+
+        <section>
+            <h2>Goals</h2>
+            <ul>
+                <li>Fast page loads to the user</li>
+                <li>Slow operations moved to background task</li>
+                <li>Notification / Push when complete</li>
+            </ul>
+        </section>
+
+        <section>
+            <section>
+                <h2>Synchronous API Call</h2>
+                <div class="mermaid">
+                    sequenceDiagram
+                    User->>+Django: Request page
+                    Django->>+API: API Request
+                    Note over API: 10s elapses
+                    API->>-Django: API Response
+                    Django->>-User: Page loads
+                </div>
+            </section>
+
+            <section>
+                <h2>Move API call to Worker</h2>
+                <div class="mermaid">
+                    sequenceDiagram
+                    User->>+Django: Request page
+                    Django->>-User: Page skeleton
+                    Worker->>+API: API Request
+                    Note over API: 10s elapses
+                    API->>-Worker: API Response
+                </div>
+            </section>
+
+            <section>
+                <h2>Add Celery as Queue</h2>
+                <div class="mermaid">
+                    sequenceDiagram
+                    User->>+Django: Request page
+                    Django-->>Celery: Work item
+                    Django->>-User: Page skeleton
+                    Celery-->>+Worker: Work item
+                    Worker->>+API: API Request
+                    Note over API: 10s elapses
+                    API->>-Worker: API Response
+                    Worker->>-Celery: Work result
+                </div>
+            </section>
+
+            <section>
+                <h2>Retrieve Results</h2>
+                <div class="mermaid">
+                    sequenceDiagram
+                    User->>+Django: Request page
+                    Django-->>Celery: Work item
+                    Django->>-User: Page skeleton
+                    Celery-->>+Worker: Work item
+                    Worker->>+API: API Request
+                    Note over API: 10s elapses
+                    API->>-Worker: API Response
+                    Worker->>-Celery: Work result
+                    User->>+Django: Is it done?
+                    Django->>+Celery: Is it done?
+                    Celery->>-Django: Work result
+                    Django->>-User: Work result
+                </div>
+            </section>
+        </section>
+
+        <section>
+            <h2>Celery Installation / Configuration</h2>
+            <p>Screenshots of documentation.</p>
+        </section>
+
+        <section>
+            <h2>Convert your API call to a task</h2>
+        </section>
+
+        <section>
+            <h2>Add endpoint for checking status</h2>
+        </section>
+
+        <section>
+            <h2>Add Javascript polling</h2>
+            <img src="chucknorris.jpg">
+            <p class="fragment">
+                <small>...in the real world, consider Fanout or another websocket wrapper</small>
+            </p>
+        </section>
+
+        <section>
+            <h2>Start worker process</h2>
+        </section>
+
+        <section>
+            <h2>Win</h2>
+        </section>
+    </div>
+
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.js"></script>
+
+<script>
+
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+            {
+                src: 'lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+                src: 'plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/highlight/highlight.js', async: true, condition: function () {
+                return !!document.querySelector('pre code');
+            }, callback: function () {
+                hljs.initHighlightingOnLoad();
+            }
+            },
+            {src: 'plugin/zoom-js/zoom.js', async: true},
+            {src: 'plugin/notes/notes.js', async: true}
+        ]
+    });
+
+</script>
+
+</body>
+</html>
