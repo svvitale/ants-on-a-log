@@ -85,10 +85,33 @@
         .reveal pre code {
             max-height: 600px !important;
         }
+
+        #header-left {
+          position: absolute;
+          top: 0%;
+          left: 0%;
+        }
+
+        #header-right {
+            position: absolute;
+            top: 0%;
+            right: 0%;
+        }
+        #footer-left {
+            position: absolute;
+            bottom: 0%;
+            left: 0%;
+        }
     </style>
 </head>
 
 <body>
+
+<div id="hidden" style="display:none;">
+    <div id="header">
+        <div id="footer-left">@svvitale <i class="fa fa-twitter"></i> <i class="fa fa-github"></i> <i class="fa fa-facebook"></i> <i class="fa fa-linkedin"></i></div>
+    </div>
+</div>
 
 <div class="reveal">
 
@@ -100,7 +123,6 @@
             <img src="celery.png" class="image-no-border">
             <p>
                 Scott Vitale, Founder @ <img src="spigotlabs.png" class="image-no-border" /><br/>
-                @svvitale <i class="fa fa-twitter"></i> <i class="fa fa-github"></i> <i class="fa fa-facebook"></i> <i class="fa fa-linkedin"></i>
             </p>
         </section>
 
@@ -425,11 +447,8 @@ class StatusView(View):
         <section>
             <h2>Thank You</h2>
             <div>
-                https://ants.vitale.io (presentation)
+                http://ants.vitale.io (presentation)
                 https://github.com/svvitale/kick-ass-pets (demo)
-            </div>
-            <div class="space-before">
-                @svvitale <i class="fa fa-twitter"></i> <i class="fa fa-github"></i> <i class="fa fa-facebook"></i> <i class="fa fa-linkedin"></i>
             </div>
         </section>
     </div>
@@ -480,6 +499,18 @@ class StatusView(View):
         ]
     });
 
+</script>
+
+<script src="bower_components/jquery/dist/jquery.js"></script>
+
+<script type="text/javascript">
+  var header = $('#header').html();
+  if ( window.location.search.match( /print-pdf/gi ) ) {
+    $('.slides > section').prepend(header);
+  }
+  else {
+    $('.slides').prepend(header);
+  }
 </script>
 
 </body>
